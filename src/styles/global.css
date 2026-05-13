@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, 'Noto Sans KR', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.input {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  padding: 0.9rem 1rem;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #0f172a;
+}
+
+.button-primary {
+  border-radius: 1rem;
+  background: #0f172a;
+  color: white;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.button-secondary {
+  border-radius: 1rem;
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.button-danger {
+  border-radius: 1rem;
+  background: #ef4444;
+  color: white;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}

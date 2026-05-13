@@ -1,0 +1,43 @@
+// TodayPage.tsx 수정
+
+// 추가 import
+import { addReviewOnce } from '../services/review'
+
+// 기존 addReview 함수 전체 교체
+async function addReview() {
+  if (!user || !conversation) return
+
+  const result = await addReviewOnce(user.id, conversation.id)
+
+  if (result.status === 'already_exists') {
+    const goHome = window.confirm('이미 복습 목록에 있습니다. 홈으로 돌아가겠습니까?')
+    if (goHome) navigate('/')
+    else setMessage(result.message)
+    return
+  }
+
+  setMessage(result.message)
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  })
+}
+
+// 듣기 버튼 onClick 내부 맨 위 추가
+window.scrollTo({
+  top: 0,
+  behavior: 'smooth',
+})
+
+// 녹음 버튼 onClick 내부 맨 위 추가
+window.scrollTo({
+  top: 0,
+  behavior: 'smooth',
+})
+
+// 쉐도잉 버튼 onClick 내부 맨 위 추가
+window.scrollTo({
+  top: 0,
+  behavior: 'smooth',
+})
