@@ -6,7 +6,7 @@ const navItems = [
   { to: '/', label: '홈', icon: '⌂' },
   { to: '/today', label: '오늘', icon: '▣' },
   { to: '/catalog', label: '대화목록', icon: '◌' },
-  { to: '/conversation/new', label: '대화추가', icon: '+' },
+  { to: '/conversation/new', label: '추가', icon: '+' },
   { to: '/review', label: '복습', icon: '↻' },
   { to: '/records', label: '기록', icon: '▥' },
 ]
@@ -47,7 +47,7 @@ export default function AppLayout() {
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/92 px-2 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/70 bg-white/95 px-2 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:hidden">
         <div className="mx-auto grid max-w-md grid-cols-6 gap-1">
           {navItems.map((item) => (
             <NavLink
