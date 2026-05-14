@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* STEP24 bottom nav only image matched UI */
+/* STEP28 two bottom bars fix */
 
 :root {
   color-scheme: light;
@@ -55,6 +55,21 @@ a {
 button:active,
 a:active {
   transform: scale(0.985);
+}
+
+/*
+  TodayPage / ConversationPage의 학습 액션바는 기존 코드에서
+  fixed inset-x-0 bottom-0 z-20 형태입니다.
+  메인 하단 메뉴와 겹치지 않도록 위로 올립니다.
+*/
+.fixed.inset-x-0.bottom-0.z-20 {
+  bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+  z-index: 80 !important;
+  border-radius: 22px 22px 0 0;
+}
+
+.app-main-bottom-nav {
+  min-height: 76px;
 }
 
 ::-webkit-scrollbar {
