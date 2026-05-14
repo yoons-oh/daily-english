@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* STEP28 two bottom bars fix */
+/* STEP29 study header sticky fix + two bottom bars */
 
 :root {
   color-scheme: light;
@@ -58,9 +58,18 @@ a:active {
 }
 
 /*
-  TodayPage / ConversationPage의 학습 액션바는 기존 코드에서
-  fixed inset-x-0 bottom-0 z-20 형태입니다.
-  메인 하단 메뉴와 겹치지 않도록 위로 올립니다.
+  STEP29 핵심 수정:
+  TodayPage / ConversationPage의 대화 정보 카드가 sticky로 고정되어
+  스크롤 중 대화 문장 위에 겹쳐 보이는 문제 수정.
+*/
+.sticky {
+  position: static !important;
+  top: auto !important;
+}
+
+/*
+  STEP28 유지:
+  학습 액션바는 메인 하단 메뉴 위에 위치.
 */
 .fixed.inset-x-0.bottom-0.z-20 {
   bottom: calc(76px + env(safe-area-inset-bottom)) !important;
@@ -68,8 +77,19 @@ a:active {
   border-radius: 22px 22px 0 0;
 }
 
+.fixed.inset-x-0.bottom-0.z-\[80\] {
+  bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+  z-index: 80 !important;
+  border-radius: 22px 22px 0 0;
+}
+
 .app-main-bottom-nav {
   min-height: 76px;
+}
+
+/* 하단 2단 메뉴 때문에 마지막 문장이 가려지지 않도록 여유 공간 확보 */
+main {
+  padding-bottom: 190px !important;
 }
 
 ::-webkit-scrollbar {
