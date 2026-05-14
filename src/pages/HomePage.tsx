@@ -49,17 +49,17 @@ export default function HomePage() {
 
   return (
     <section className="space-y-6">
-      <div className="relative overflow-hidden rounded-[34px] border border-slate-200/70 bg-white p-7 shadow-[0_18px_45px_rgba(15,23,42,0.06)] md:p-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50" />
-        <div className="absolute right-7 top-20 hidden md:block">
+      <div className="relative overflow-hidden rounded-[34px] border border-indigo-100 bg-white p-7 shadow-[0_20px_50px_rgba(15,23,42,0.06)] md:p-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/70" />
+        <div className="absolute right-5 top-14 hidden md:block">
           <HeroIllustration />
         </div>
 
-        <div className="relative max-w-[640px]">
+        <div className="relative md:max-w-[650px]">
           <p className="text-[22px] font-black tracking-[-0.03em] text-indigo-500">
             {greeting}
           </p>
-          <h2 className="mt-5 text-[42px] font-black leading-[1.1] tracking-[-0.065em] text-slate-950 md:text-[56px]">
+          <h2 className="mt-5 text-[40px] font-black leading-[1.12] tracking-[-0.065em] text-slate-950 md:text-[56px]">
             오늘도 영어 10분,
             <br />
             가볍게 시작해볼까요?
@@ -72,7 +72,7 @@ export default function HomePage() {
 
           <Link
             to={stats.todayCompleted ? '/catalog' : '/today'}
-            className="mt-8 flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-5 text-[20px] font-black text-white shadow-[0_14px_30px_rgba(79,70,229,0.28)] md:max-w-[760px]"
+            className="mt-8 flex w-full items-center justify-center rounded-[22px] bg-gradient-to-r from-indigo-600 to-blue-500 px-6 py-5 text-[20px] font-black text-white shadow-[0_14px_30px_rgba(79,70,229,0.28)]"
           >
             <span>{stats.todayCompleted ? '추가 대화 학습하기' : '오늘의 학습 시작하기'}</span>
             <span className="ml-auto text-3xl font-light">→</span>
