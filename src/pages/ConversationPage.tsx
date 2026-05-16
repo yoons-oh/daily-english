@@ -55,7 +55,6 @@ export default function ConversationPage() {
     loadConversation()
   }, [id])
 
-
   async function completeStudy() {
     if (!user || !conversation) return
 
@@ -190,6 +189,12 @@ export default function ConversationPage() {
         </div>
       )}
 
+      {showRecorder && !showShadowing && (
+        <div className="mb-3 mt-3">
+          <Recorder compact />
+        </div>
+      )}
+
       {showShadowing && (
         <div className="mb-3 mt-3">
           <ShadowingMode lines={conversation.dialogue_lines} />
@@ -237,12 +242,6 @@ export default function ConversationPage() {
         </div>
       )}
 
-      {showRecorder && (
-        <div className="mt-4">
-          <Recorder compact />
-        </div>
-      )}
-
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)] backdrop-blur md:static md:mt-5 md:rounded-3xl md:border md:shadow-sm">
         <div className="mx-auto grid max-w-5xl grid-cols-5 gap-2">
           <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-2 py-3 text-xs font-extrabold text-white md:text-sm">
@@ -259,7 +258,9 @@ export default function ConversationPage() {
           </button>
           <button
             onClick={openRecorder}
-            className="rounded-2xl bg-slate-100 px-2 py-3 text-xs font-extrabold text-slate-700 md:text-sm"
+            className={`rounded-2xl px-2 py-3 text-xs font-extrabold md:text-sm ${
+              showRecorder ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+            }`}
           >
             녹음
           </button>
