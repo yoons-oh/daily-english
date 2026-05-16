@@ -50,34 +50,22 @@ export default function TodayPage() {
   async function completeStudy() {
     if (!user || !conversation) return
     const result = await completeStudyOnce(user.id, conversation.id)
-
-    if (result.status === 'created') {
-      setMessage('학습 완료! 기록에 저장했어요.')
-      return
-    }
-
-    if (result.status === 'already_completed') {
+    if (result.status === 'created') setMessage('학습 완료! 기록에 저장했어요.')
+    else if (result.status === 'already_completed') {
       const goHome = window.confirm('이미 저장한 학습입니다. 홈으로 돌아가겠습니까?')
       if (goHome) navigate('/')
       else setMessage('이미 오늘 학습 완료된 대화입니다.')
-      return
-    }
-
-    setMessage(result.message)
+    } else setMessage(result.message)
   }
 
   async function addReview() {
     if (!user || !conversation) return
     const result = await addReviewOnce(user.id, conversation.id)
-
     if (result.status === 'already_exists') {
       const goHome = window.confirm('이미 복습 목록에 있습니다. 홈으로 돌아가겠습니까?')
       if (goHome) navigate('/')
       else setMessage(result.message)
-      return
-    }
-
-    setMessage(result.message)
+    } else setMessage(result.message)
   }
 
   function openTTS() {
@@ -104,9 +92,7 @@ export default function TodayPage() {
     forceScrollTopAfterRender()
   }
 
-  if (loading) {
-    return <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-500">오늘의 고정 학습을 불러오는 중...</div>
-  }
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center text-sm text-slate-500">오늘의 고정 학습을 불러오는 중...</div>
 
   if (!conversation) {
     return (
@@ -120,39 +106,21 @@ export default function TodayPage() {
   const englishLines = conversation.dialogue_lines.map((line) => line.english_text)
 
   return (
-    <section className="pb-28 md:pb-10">
+    <section className="pb-44 md:pb-44">
       <div className="rounded-[28px] bg-white p-5 shadow-sm">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-black text-blue-500">오늘의 고정 학습</p>
-            <h1 className="mt-1 truncate text-[28px] font-black tracking-[-0.06em] text-slate-950">
-              {conversation.title}
-            </h1>
+            <h1 className="mt-1 truncate text-[28px] font-black tracking-[-0.06em] text-slate-950">{conversation.title}</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">오늘 하루는 이 대화가 계속 표시됩니다.</p>
           </div>
-          <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-600">
-            {conversation.dialogue_lines.length}문장
-          </span>
+          <span className="shrink-0 rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-600">{conversation.dialogue_lines.length}문장</span>
         </div>
       </div>
 
-      {showRecorder && !showShadowing && (
-        <div className="mt-4">
-          <Recorder compact />
-        </div>
-      )}
-
-      {showTTS && (
-        <div className="mt-4">
-          <TTSControls lines={englishLines} title={conversation.title} situation={conversation.situation} />
-        </div>
-      )}
-
-      {showShadowing && (
-        <div className="mt-4">
-          <ShadowingMode lines={conversation.dialogue_lines} />
-        </div>
-      )}
+      {showRecorder && !showShadowing && <div className="mt-4"><Recorder compact /></div>}
+      {showTTS && <div className="mt-4"><TTSControls lines={englishLines} title={conversation.title} situation={conversation.situation} /></div>}
+      {showShadowing && <div className="mt-4"><ShadowingMode lines={conversation.dialogue_lines} /></div>}
 
       {!showShadowing && (
         <>
@@ -177,8 +145,8 @@ export default function TodayPage() {
 
       {message && <div className="mt-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{message}</div>}
 
-      <div className="fixed inset-x-0 bottom-[72px] z-30 px-3 md:bottom-0">
-        <div className="mx-auto max-w-[480px] rounded-[24px] border border-slate-200 bg-white/95 p-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:rounded-b-none">
+      <div className="fixed inset-x-0 bottom-[84px] z-[60] px-3">
+        <div className="mx-auto max-w-[480px] rounded-[24px] border border-slate-200 bg-white/95 p-2 shadow-[0_-8px_24px_rgba(15,23,42,0.1)] backdrop-blur">
           <div className="grid grid-cols-5 gap-2">
             <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-1 py-3 text-[11px] font-black text-white">완료</button>
             <button onClick={addReview} className="rounded-2xl bg-blue-50 px-1 py-3 text-[11px] font-black text-blue-600">복습</button>
