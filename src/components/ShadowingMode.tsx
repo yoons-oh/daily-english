@@ -385,6 +385,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
   const currentLine = lines[currentIndex]
   const isActive = phase !== 'idle' && phase !== 'done'
+  const isPracticePhase = phase === 'recording' || phase === 'speaking'
   const currentSeconds = currentLine ? getPracticeSeconds(currentLine.english_text) : 5
   const progress = lines.length === 0 ? 0 : Math.round(((currentIndex + (phase === 'done' ? 1 : 0)) / lines.length) * 100)
   const currentRecording = currentLine ? recordings[currentLine.id] : null
@@ -395,11 +396,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
   return (
     <div className="overflow-hidden rounded-[30px] border border-slate-100 bg-white p-5 shadow-[0_16px_45px_rgba(15,23,42,0.06)]">
-      <style>{`
-        @keyframes recordingPulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.08); opacity: .72; } 100% { transform: scale(1); opacity: 1; } }
-        .shadow-recording-pulse { animation: recordingPulse 1s infinite; }
-      `}</style>
-
       <div className="flex items-center justify-between">
         <button onClick={stopShadowing} className="grid h-9 w-9 place-items-center rounded-full bg-slate-50 text-xl font-black text-slate-700">×</button>
         <h3 className="text-[18px] font-black tracking-[-0.04em] text-slate-950">쉐도잉</h3>
@@ -438,16 +434,8 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
         </div>
       </div>
 
-      <div className="mt-5 text-center">
+      <div className="mt-5 min-h-[52px] rounded-[20px] bg-slate-50 px-4 py-3 text-center">
         <p className="text-[14px] font-semibold leading-6 text-slate-500">{message}</p>
-        {(phase === 'recording' || phase === 'speaking') && (
-          <div className="mt-4 text-blue-500">
-            <p className="shadow-recording-pulse text-5xl">〰️</p>
-            <p className={`mt-2 text-sm font-black ${phase === 'recording' ? 'text-red-500' : 'text-blue-600'}`}>
-              {phase === 'recording' ? `녹음 중 ${countdown}초` : `따라 말하기 ${countdown}초`}
-            </p>
-          </div>
-        )}
       </div>
 
       {recordingError && <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{recordingError}</div>}
@@ -467,8 +455,14 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
           <button onClick={startShadowing} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(79,70,229,0.25)]">
             {recordEnabled ? `🎙️ ${currentSeconds}초 말하기 시작` : `🗣️ ${currentSeconds}초 따라하기 시작`}
           </button>
+        ) : phase === 'listening' || phase === 'waiting' || phase === 'preparing' || phase === 'moving' ? (
+          <button onClick={stopShadowing} className="flex h-[58px] items-center justify-center rounded-[18px] bg-gradient-to-r from-red-500 to-rose-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(239,68,68,0.22)]">
+            {phase === 'listening' ? '듣는 중...' : phase === 'waiting' ? '준비 중...' : phase === 'moving' ? '다음 문장 이동 중...' : '준비 중...'}
+          </button>
         ) : (
-          <button onClick={stopShadowing} className="flex h-[58px] items-center justify-center rounded-[18px] bg-gradient-to-r from-red-500 to-rose-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(239,68,68,0.22)]">중지</button>
+          <button onClick={stopShadowing} className="flex h-[58px] items-center justify-center rounded-[18px] bg-gradient-to-r from-red-500 to-rose-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(239,68,68,0.22)]">
+            {phase === 'recording' ? `🎙️ 녹음 중 ${countdown}초` : `🗣️ 따라 말하기 ${countdown}초`}
+          </button>
         )}
 
         <button onClick={() => goToIndex(currentIndex + 1)} disabled={isActive || currentIndex >= lines.length - 1} className="h-[56px] rounded-[18px] bg-slate-50 text-[15px] font-black text-blue-600 disabled:opacity-40">다음 문장</button>
