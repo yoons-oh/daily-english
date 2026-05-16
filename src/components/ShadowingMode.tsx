@@ -44,8 +44,8 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
   const [message, setMessage] = useState('원문을 듣고 따라 말해보세요.')
   const [countdown, setCountdown] = useState(5)
   const [recordingError, setRecordingError] = useState('')
-  const [micReady, setMicReady] = useState(false)
   const [recordEnabled, setRecordEnabled] = useState(true)
+  const [showAllLines, setShowAllLines] = useState(false)
 
   const currentIndexRef = useRef(0)
   const recordEnabledRef = useRef(true)
@@ -112,7 +112,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
   function stopStream() {
     streamRef.current?.getTracks().forEach((track) => track.stop())
     streamRef.current = null
-    setMicReady(false)
   }
 
   function stopRecordingIfNeeded() {
@@ -142,7 +141,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     })
     streamRef.current = stream
-    setMicReady(true)
     return stream
   }
 
@@ -338,18 +336,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
     setMessage('중지했어요. 시작을 누르면 현재 문장부터 다시 진행합니다.')
   }
 
-  function resetAll() {
-    hardStop()
-    Object.values(recordingsRef.current).forEach((recording) => URL.revokeObjectURL(recording.url))
-    setRecordings({})
-    setRecordingError('')
-    currentIndexRef.current = 0
-    setCurrentIndex(0)
-    setCountdown(lines[0] ? getPracticeSeconds(lines[0].english_text) : 5)
-    setPhase('idle')
-    setMessage('처음부터 다시 시작할 수 있어요.')
-  }
-
   function replayFromCurrent() {
     if (runningRef.current) return
     stoppedRef.current = false
@@ -385,7 +371,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
   const currentLine = lines[currentIndex]
   const isActive = phase !== 'idle' && phase !== 'done'
-  const isPracticePhase = phase === 'recording' || phase === 'speaking'
   const currentSeconds = currentLine ? getPracticeSeconds(currentLine.english_text) : 5
   const progress = lines.length === 0 ? 0 : Math.round(((currentIndex + (phase === 'done' ? 1 : 0)) / lines.length) * 100)
   const currentRecording = currentLine ? recordings[currentLine.id] : null
@@ -464,8 +449,6 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
             {phase === 'recording' ? `🎙️ 녹음 중 ${countdown}초` : `🗣️ 따라 말하기 ${countdown}초`}
           </button>
         )}
-
-        <button onClick={() => goToIndex(currentIndex + 1)} disabled={isActive || currentIndex >= lines.length - 1} className="h-[56px] rounded-[18px] bg-slate-50 text-[15px] font-black text-blue-600 disabled:opacity-40">다음 문장</button>
       </div>
 
       <div className="mt-5 flex items-center justify-between">
@@ -480,8 +463,37 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button onClick={replayFromCurrent} disabled={isActive} className="rounded-2xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-600 disabled:opacity-40">현재 문장 다시</button>
-        <button onClick={resetAll} className="rounded-2xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-600">초기화</button>
+        <button onClick={() => setShowAllLines((value) => !value)} className="rounded-2xl bg-slate-100 px-3 py-3 text-sm font-black text-slate-600">
+          {showAllLines ? '전체 문장 닫기' : '전체 문장 보기'}
+        </button>
       </div>
+
+      {showAllLines && (
+        <div className="mt-4 overflow-hidden rounded-[24px] border border-slate-100 bg-slate-50">
+          <div className="border-b border-slate-100 bg-white px-4 py-3">
+            <p className="text-sm font-black text-slate-900">전체 대화</p>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {lines.map((line, index) => (
+              <button
+                key={line.id}
+                type="button"
+                onClick={() => goToIndex(index)}
+                disabled={isActive}
+                className={`grid w-full grid-cols-[32px_1fr] gap-3 px-4 py-3 text-left disabled:opacity-60 ${index === currentIndex ? 'bg-blue-50' : 'bg-white'}`}
+              >
+                <span className={`grid h-8 w-8 place-items-center rounded-full text-xs font-black ${line.speaker === 'A' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                  {line.speaker}
+                </span>
+                <span>
+                  <span className="block text-[14px] font-black leading-6 text-slate-950">{line.english_text}</span>
+                  <span className="mt-1 block text-xs font-semibold leading-5 text-slate-500">{line.korean_text}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
