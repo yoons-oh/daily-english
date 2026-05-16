@@ -157,39 +157,17 @@ export default function TodayPage() {
       {!showShadowing && (
         <>
           <div className="mt-4 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
-            <button
-              onClick={() => setTab('english')}
-              className={`rounded-xl py-3 text-sm font-black ${tab === 'english' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
-            >
-              영어
-            </button>
-            <button
-              onClick={() => setTab('korean')}
-              className={`rounded-xl py-3 text-sm font-black ${tab === 'korean' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
-            >
-              한글
-            </button>
+            <button onClick={() => setTab('english')} className={`rounded-xl py-3 text-sm font-black ${tab === 'english' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>영어</button>
+            <button onClick={() => setTab('korean')} className={`rounded-xl py-3 text-sm font-black ${tab === 'korean' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}>한글</button>
           </div>
 
           <div className="mt-4 overflow-hidden rounded-[28px] bg-white shadow-sm">
             <div className="divide-y divide-slate-100">
               {conversation.dialogue_lines.map((line) => (
                 <div key={line.id} className="grid grid-cols-[34px_1fr_34px] gap-3 px-4 py-4">
-                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${line.speaker === 'A' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                    {line.speaker}
-                  </div>
-
-                  <p className="text-[16px] font-black leading-7 text-slate-950">
-                    {tab === 'english' ? line.english_text : line.korean_text}
-                  </p>
-
-                  <button
-                    onClick={() => speak(line.english_text)}
-                    className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-sm"
-                    title="문장 듣기"
-                  >
-                    🔊
-                  </button>
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${line.speaker === 'A' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>{line.speaker}</div>
+                  <p className="text-[16px] font-black leading-7 text-slate-950">{tab === 'english' ? line.english_text : line.korean_text}</p>
+                  <button onClick={() => speak(line.english_text)} className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-sm" title="문장 듣기">🔊</button>
                 </div>
               ))}
             </div>
@@ -199,13 +177,15 @@ export default function TodayPage() {
 
       {message && <div className="mt-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white">{message}</div>}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <div className="mx-auto grid max-w-5xl grid-cols-5 gap-2">
-          <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-2 py-3 text-xs font-black text-white">완료</button>
-          <button onClick={addReview} className="rounded-2xl bg-blue-50 px-2 py-3 text-xs font-black text-blue-600">복습</button>
-          <button onClick={openTTS} className={`rounded-2xl px-2 py-3 text-xs font-black ${showTTS ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>듣기</button>
-          <button onClick={openRecorder} className={`rounded-2xl px-2 py-3 text-xs font-black ${showRecorder ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>녹음</button>
-          <button onClick={toggleShadowing} className={`rounded-2xl px-2 py-3 text-xs font-black ${showShadowing ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>쉐도잉</button>
+      <div className="fixed inset-x-0 bottom-[72px] z-30 px-3 md:bottom-0">
+        <div className="mx-auto max-w-[480px] rounded-[24px] border border-slate-200 bg-white/95 p-2 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:rounded-b-none">
+          <div className="grid grid-cols-5 gap-2">
+            <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-1 py-3 text-[11px] font-black text-white">완료</button>
+            <button onClick={addReview} className="rounded-2xl bg-blue-50 px-1 py-3 text-[11px] font-black text-blue-600">복습</button>
+            <button onClick={openTTS} className={`rounded-2xl px-1 py-3 text-[11px] font-black ${showTTS ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>듣기</button>
+            <button onClick={openRecorder} className={`rounded-2xl px-1 py-3 text-[11px] font-black ${showRecorder ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>녹음</button>
+            <button onClick={toggleShadowing} className={`rounded-2xl px-1 py-3 text-[11px] font-black ${showShadowing ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>쉐도잉</button>
+          </div>
         </div>
       </div>
     </section>
