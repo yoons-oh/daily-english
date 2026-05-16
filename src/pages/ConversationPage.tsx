@@ -33,23 +33,15 @@ export default function ConversationPage() {
       if (!id) return
 
       setLoading(true)
-      setMessage('')
-
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('conversations')
         .select('*, dialogue_lines(*)')
         .eq('id', id)
         .order('line_order', { referencedTable: 'dialogue_lines', ascending: true })
         .single()
 
-      if (error) {
-        setMessage(error.message)
-      } else {
-        setConversation(data as ConversationWithLines)
-      }
-
+      setConversation(data as ConversationWithLines)
       setLoading(false)
-      forceScrollTopAfterRender()
     }
 
     loadConversation()
@@ -57,46 +49,14 @@ export default function ConversationPage() {
 
   async function completeStudy() {
     if (!user || !conversation) return
-
     const result = await completeStudyOnce(user.id, conversation.id)
-
-    if (result.status === 'created') {
-      setMessage('학습 완료! 기록에 저장했어요.')
-      forceScrollTopAfterRender()
-      return
-    }
-
-    if (result.status === 'already_completed') {
-      const goHome = window.confirm('이미 저장한 학습입니다. 홈으로 돌아가겠습니까?')
-      if (goHome) navigate('/')
-      else {
-        setMessage('이미 오늘 학습 완료된 대화입니다.')
-        forceScrollTopAfterRender()
-      }
-      return
-    }
-
-    setMessage(result.message)
-    forceScrollTopAfterRender()
+    setMessage(result.message ?? '학습 완료')
   }
 
   async function addReview() {
     if (!user || !conversation) return
-
     const result = await addReviewOnce(user.id, conversation.id)
-
-    if (result.status === 'already_exists') {
-      const goHome = window.confirm('이미 복습 목록에 있습니다. 홈으로 돌아가겠습니까?')
-      if (goHome) navigate('/')
-      else {
-        setMessage(result.message)
-        forceScrollTopAfterRender()
-      }
-      return
-    }
-
     setMessage(result.message)
-    forceScrollTopAfterRender()
   }
 
   function openTTS() {
@@ -104,7 +64,6 @@ export default function ConversationPage() {
     setShowShadowing(false)
     setShowRecorder(false)
     setShowTTS((value) => !value)
-    forceScrollTopAfterRender()
   }
 
   function openRecorder() {
@@ -112,7 +71,6 @@ export default function ConversationPage() {
     setShowShadowing(false)
     setShowTTS(false)
     setShowRecorder((value) => !value)
-    forceScrollTopAfterRender()
   }
 
   function toggleShadowing() {
@@ -120,171 +78,104 @@ export default function ConversationPage() {
     setShowTTS(false)
     setShowRecorder(false)
     setShowShadowing((value) => !value)
-    forceScrollTopAfterRender()
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[55vh] items-center justify-center">
-        <p className="text-sm text-slate-500">대화를 불러오는 중...</p>
-      </div>
-    )
-  }
-
-  if (!conversation) {
-    return (
-      <section className="rounded-3xl bg-white p-6 shadow-sm">
-        <h2 className="text-2xl font-bold">대화를 찾을 수 없습니다</h2>
-        <p className="mt-2 text-slate-600">{message || 'Supabase 데이터를 확인해주세요.'}</p>
-      </section>
-    )
+  if (loading || !conversation) {
+    return <div className="flex min-h-[50vh] items-center justify-center text-slate-500">불러오는 중...</div>
   }
 
   const englishLines = conversation.dialogue_lines.map((line) => line.english_text)
 
   return (
-    <section className="pb-28 md:pb-8">
-      <div className="sticky top-[73px] z-10 -mx-4 border-b border-slate-100 bg-slate-50/95 px-4 pb-3 pt-1 backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-4">
-        <div className="rounded-2xl bg-white px-4 py-3 shadow-sm md:rounded-3xl md:px-6 md:py-5">
-          <Link to="/catalog" className="text-xs font-bold text-slate-400">← 전체 목록</Link>
-          <div className="mt-1 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-400">선택한 대화</p>
-              <h2 className="mt-0.5 truncate text-lg font-extrabold text-slate-900 md:text-2xl">
-                {conversation.title}
-              </h2>
-              <p className="mt-1 line-clamp-1 text-xs text-slate-500 md:text-sm">
-                {conversation.situation}
-              </p>
-            </div>
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-500">
-              {conversation.dialogue_lines.length}턴
-            </span>
+    <section className="pb-28 md:pb-10">
+      <div className="rounded-[28px] bg-white p-5 shadow-sm">
+        <Link to="/catalog" className="text-xs font-black text-slate-400">← 전체 목록</Link>
+
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-blue-500">Daily English</p>
+            <h1 className="mt-1 text-[28px] font-black tracking-[-0.06em] text-slate-950">
+              {conversation.title}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">{conversation.situation}</p>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
-            <button
-              onClick={() => setTab('english')}
-              className={`rounded-xl py-2.5 text-sm font-bold ${
-                tab === 'english' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-              }`}
-            >
-              영어
-            </button>
-            <button
-              onClick={() => setTab('korean')}
-              className={`rounded-xl py-2.5 text-sm font-bold ${
-                tab === 'korean' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
-              }`}
-            >
-              한글
-            </button>
+          <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-600">
+            {conversation.dialogue_lines.length}문장
           </div>
         </div>
       </div>
 
-      {showTTS && (
-        <div className="mb-3 mt-3">
-          <TTSControls lines={englishLines} />
-        </div>
-      )}
-
       {showRecorder && !showShadowing && (
-        <div className="mb-3 mt-3">
+        <div className="mt-4">
           <Recorder compact />
         </div>
       )}
 
+      {showTTS && (
+        <div className="mt-4">
+          <TTSControls lines={englishLines} title={conversation.title} situation={conversation.situation} />
+        </div>
+      )}
+
       {showShadowing && (
-        <div className="mb-3 mt-3">
+        <div className="mt-4">
           <ShadowingMode lines={conversation.dialogue_lines} />
         </div>
       )}
 
       {!showShadowing && (
-        <div className="mt-3 overflow-hidden rounded-3xl bg-white shadow-sm">
-          <div className="divide-y divide-slate-100">
-            {conversation.dialogue_lines.map((line) => (
-              <div
-                key={line.id}
-                className="grid grid-cols-[34px_1fr_34px] gap-2 px-3 py-3 md:grid-cols-[48px_1fr_42px] md:gap-3 md:px-6 md:py-4"
-              >
-                <div
-                  className={`mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-extrabold md:h-9 md:w-9 md:text-sm ${
-                    line.speaker === 'A'
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {line.speaker}
-                </div>
-
-                <p className="pt-0.5 text-[15px] font-semibold leading-6 text-slate-900 md:text-xl md:leading-8">
-                  {tab === 'english' ? line.english_text : line.korean_text}
-                </p>
-
-                <button
-                  onClick={() => speak(line.english_text)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600"
-                  title="문장 듣기"
-                >
-                  🔊
-                </button>
-              </div>
-            ))}
+        <>
+          <div className="mt-4 grid grid-cols-2 rounded-2xl bg-slate-100 p-1">
+            <button
+              onClick={() => setTab('english')}
+              className={`rounded-xl py-3 text-sm font-black ${tab === 'english' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            >
+              영어
+            </button>
+            <button
+              onClick={() => setTab('korean')}
+              className={`rounded-xl py-3 text-sm font-black ${tab === 'korean' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'}`}
+            >
+              한글
+            </button>
           </div>
-        </div>
+
+          <div className="mt-4 overflow-hidden rounded-[28px] bg-white shadow-sm">
+            <div className="divide-y divide-slate-100">
+              {conversation.dialogue_lines.map((line) => (
+                <div key={line.id} className="grid grid-cols-[34px_1fr_34px] gap-3 px-4 py-4">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${line.speaker === 'A' ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                    {line.speaker}
+                  </div>
+
+                  <div>
+                    <p className="text-[16px] font-black leading-7 text-slate-950">
+                      {tab === 'english' ? line.english_text : line.korean_text}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => speak(line.english_text)}
+                    className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-sm"
+                  >
+                    🔊
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
-      {message && (
-        <div className="mt-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-sm">
-          {message}
-        </div>
-      )}
-
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)] backdrop-blur md:static md:mt-5 md:rounded-3xl md:border md:shadow-sm">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur">
         <div className="mx-auto grid max-w-5xl grid-cols-5 gap-2">
-          <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-2 py-3 text-xs font-extrabold text-white md:text-sm">
-            완료
-          </button>
-          <button onClick={addReview} className="rounded-2xl bg-slate-100 px-2 py-3 text-xs font-extrabold text-slate-700 md:text-sm">
-            복습
-          </button>
-          <button
-            onClick={openTTS}
-            className="rounded-2xl bg-slate-100 px-2 py-3 text-xs font-extrabold text-slate-700 md:text-sm"
-          >
-            듣기
-          </button>
-          <button
-            onClick={openRecorder}
-            className={`rounded-2xl px-2 py-3 text-xs font-extrabold md:text-sm ${
-              showRecorder ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-            }`}
-          >
-            녹음
-          </button>
-          <button
-            onClick={toggleShadowing}
-            className={`rounded-2xl px-2 py-3 text-xs font-extrabold md:text-sm ${
-              showShadowing ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-            }`}
-          >
-            쉐도잉
-          </button>
+          <button onClick={completeStudy} className="rounded-2xl bg-slate-900 px-2 py-3 text-xs font-black text-white">완료</button>
+          <button onClick={addReview} className="rounded-2xl bg-blue-50 px-2 py-3 text-xs font-black text-blue-600">복습</button>
+          <button onClick={openTTS} className={`rounded-2xl px-2 py-3 text-xs font-black ${showTTS ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>듣기</button>
+          <button onClick={openRecorder} className={`rounded-2xl px-2 py-3 text-xs font-black ${showRecorder ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>녹음</button>
+          <button onClick={toggleShadowing} className={`rounded-2xl px-2 py-3 text-xs font-black ${showShadowing ? 'bg-gradient-to-r from-indigo-600 to-blue-500 text-white' : 'bg-slate-100 text-slate-600'}`}>쉐도잉</button>
         </div>
-
-        {tab === 'korean' && !showShadowing && (
-          <button
-            onClick={() => {
-              setTab('english')
-              forceScrollTopAfterRender()
-            }}
-            className="mx-auto mt-2 block w-full max-w-5xl rounded-2xl bg-slate-50 px-3 py-2 text-sm font-bold text-slate-500"
-          >
-            기억이 안 나면 영어로 다시 보기
-          </button>
-        )}
       </div>
     </section>
   )
