@@ -9,8 +9,19 @@ type Phase = 'idle' | 'preparing' | 'listening' | 'waiting' | 'recording' | 'spe
 
 type RecordingState = Record<string, { url: string; mimeType: string; size: number }>
 
-const PRACTICE_SECONDS = 5
 const WAIT_MS = 600
+
+function getPracticeSeconds(text: string) {
+  const words = text
+    .replace(/[.,!?;:()"“”]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (words.length <= 2) return 2
+  if (words.length <= 4) return 3
+  if (words.length === 5) return 4
+  return 5
+}
 
 function getSupportedMimeType() {
   if (typeof MediaRecorder === 'undefined') return ''
@@ -31,7 +42,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [recordings, setRecordings] = useState<RecordingState>({})
   const [message, setMessage] = useState('원문을 듣고 따라 말해보세요.')
-  const [countdown, setCountdown] = useState(PRACTICE_SECONDS)
+  const [countdown, setCountdown] = useState(5)
   const [recordingError, setRecordingError] = useState('')
   const [micReady, setMicReady] = useState(false)
   const [recordEnabled, setRecordEnabled] = useState(true)
@@ -49,7 +60,9 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
   useEffect(() => {
     currentIndexRef.current = currentIndex
-  }, [currentIndex])
+    const line = lines[currentIndex]
+    if (line) setCountdown(getPracticeSeconds(line.english_text))
+  }, [currentIndex, lines])
 
   useEffect(() => {
     recordEnabledRef.current = recordEnabled
@@ -133,12 +146,12 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
     return stream
   }
 
-  function speakOnce(text: string) {
+  function speakOnce(text: string, rate = 0.9) {
     return new Promise<void>((resolve) => {
       window.speechSynthesis.cancel()
       const utterance = new SpeechSynthesisUtterance(text)
       utterance.lang = 'en-US'
-      utterance.rate = 0.9
+      utterance.rate = rate
       utterance.pitch = 1
       let resolved = false
       const finish = () => {
@@ -169,13 +182,13 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
     return true
   }
 
-  function startSpeakingTimer() {
+  function startSpeakingTimer(line: DialogueLine) {
     if (stoppedRef.current) return
 
-    clearCountdownTimer()
+    const seconds = getPracticeSeconds(line.english_text)
     setPhase('speaking')
-    setMessage(`${PRACTICE_SECONDS}초 동안 소리 내어 따라 말해보세요. 녹음은 하지 않습니다.`)
-    startCountdown(PRACTICE_SECONDS)
+    setMessage(`${seconds}초 동안 소리 내어 따라 말해보세요. 녹음은 하지 않습니다.`)
+    startCountdown(seconds)
 
     setSingleTimer(() => {
       clearCountdownTimer()
@@ -183,14 +196,14 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       setPhase('moving')
       setMessage('연습 완료. 다음 문장으로 넘어갑니다.')
       setSingleTimer(() => moveToNext(), WAIT_MS)
-    }, PRACTICE_SECONDS * 1000)
+    }, seconds * 1000)
   }
 
   async function startRecording(line: DialogueLine) {
     if (stoppedRef.current) return
 
     if (!recordEnabledRef.current) {
-      startSpeakingTimer()
+      startSpeakingTimer(line)
       return
     }
 
@@ -198,6 +211,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       const stream = await ensureMicrophoneStream()
       if (stoppedRef.current) return
 
+      const seconds = getPracticeSeconds(line.english_text)
       chunksRef.current = []
       const mimeType = getSupportedMimeType()
       const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream)
@@ -218,9 +232,9 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       }
 
       setPhase('recording')
-      setMessage(`녹음 중입니다. ${PRACTICE_SECONDS}초 동안 따라 읽어주세요.`)
+      setMessage(`녹음 중입니다. ${seconds}초 동안 따라 읽어주세요.`)
       recorder.start(200)
-      startCountdown(PRACTICE_SECONDS)
+      startCountdown(seconds)
 
       setSingleTimer(() => {
         if (mediaRecorderRef.current?.state === 'recording') {
@@ -229,7 +243,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
             if (mediaRecorderRef.current?.state === 'recording') mediaRecorderRef.current.stop()
           }, 120)
         }
-      }, PRACTICE_SECONDS * 1000)
+      }, seconds * 1000)
     } catch (error) {
       hardStop()
       setPhase('idle')
@@ -285,6 +299,15 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
     }
   }
 
+  function goToIndex(index: number) {
+    if (isActive) return
+    const nextIndex = Math.min(Math.max(index, 0), lines.length - 1)
+    currentIndexRef.current = nextIndex
+    setCurrentIndex(nextIndex)
+    setPhase('idle')
+    setMessage('원문을 듣고 따라 말해보세요.')
+  }
+
   function moveToNext() {
     if (stoppedRef.current) return
     const nextIndex = currentIndexRef.current + 1
@@ -322,7 +345,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
     setRecordingError('')
     currentIndexRef.current = 0
     setCurrentIndex(0)
-    setCountdown(PRACTICE_SECONDS)
+    setCountdown(lines[0] ? getPracticeSeconds(lines[0].english_text) : 5)
     setPhase('idle')
     setMessage('처음부터 다시 시작할 수 있어요.')
   }
@@ -344,12 +367,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
   function playSlowOriginal() {
     const line = lines[currentIndex]
     if (!line || (phase !== 'idle' && phase !== 'done')) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(line.english_text)
-    utterance.lang = 'en-US'
-    utterance.rate = 0.68
-    utterance.pitch = 1
-    window.speechSynthesis.speak(utterance)
+    speakOnce(line.english_text, 0.68)
   }
 
   function toggleRecordEnabled() {
@@ -367,6 +385,7 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
 
   const currentLine = lines[currentIndex]
   const isActive = phase !== 'idle' && phase !== 'done'
+  const currentSeconds = currentLine ? getPracticeSeconds(currentLine.english_text) : 5
   const progress = lines.length === 0 ? 0 : Math.round(((currentIndex + (phase === 'done' ? 1 : 0)) / lines.length) * 100)
   const currentRecording = currentLine ? recordings[currentLine.id] : null
 
@@ -388,16 +407,11 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       </div>
 
       <div className="mt-4 rounded-[20px] bg-slate-50 p-3">
-        <button
-          type="button"
-          onClick={toggleRecordEnabled}
-          disabled={isActive}
-          className="flex w-full items-center justify-between gap-3 disabled:opacity-50"
-        >
+        <button type="button" onClick={toggleRecordEnabled} disabled={isActive} className="flex w-full items-center justify-between gap-3 disabled:opacity-50">
           <div className="text-left">
             <p className="text-[13px] font-black text-slate-900">내 목소리 녹음</p>
             <p className="mt-1 text-[12px] font-semibold text-slate-500">
-              {recordEnabled ? '문장마다 녹음하고 재생할 수 있어요.' : '녹음 없이 따라 말하기 시간만 제공돼요.'}
+              {recordEnabled ? `문장 길이에 따라 ${currentSeconds}초 녹음합니다.` : `녹음 없이 ${currentSeconds}초 따라 말합니다.`}
             </p>
           </div>
           <span className={`flex h-7 w-12 items-center rounded-full p-1 transition ${recordEnabled ? 'bg-blue-600' : 'bg-slate-300'}`}>
@@ -415,12 +429,8 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
           {currentLine.speaker}
         </div>
 
-        <p className="mt-7 text-[23px] font-black leading-[1.35] tracking-[-0.04em] text-slate-950">
-          {currentLine.english_text}
-        </p>
-        <p className="mt-5 text-[14px] font-semibold leading-6 text-slate-500">
-          {currentLine.korean_text}
-        </p>
+        <p className="mt-7 text-[23px] font-black leading-[1.35] tracking-[-0.04em] text-slate-950">{currentLine.english_text}</p>
+        <p className="mt-5 text-[14px] font-semibold leading-6 text-slate-500">{currentLine.korean_text}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button onClick={playOriginal} disabled={isActive} className="rounded-[16px] bg-blue-50 px-3 py-3 text-[13px] font-black text-blue-600 disabled:opacity-40">🔊 원문 듣기</button>
@@ -455,23 +465,23 @@ export default function ShadowingMode({ lines }: ShadowingModeProps) {
       <div className="mt-5 grid gap-3">
         {!isActive ? (
           <button onClick={startShadowing} className="flex h-[58px] items-center justify-center gap-2 rounded-[18px] bg-gradient-to-r from-indigo-600 to-blue-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(79,70,229,0.25)]">
-            {recordEnabled ? '🎙️ 말하기 시작' : '🗣️ 따라하기 시작'}
+            {recordEnabled ? `🎙️ ${currentSeconds}초 말하기 시작` : `🗣️ ${currentSeconds}초 따라하기 시작`}
           </button>
         ) : (
           <button onClick={stopShadowing} className="flex h-[58px] items-center justify-center rounded-[18px] bg-gradient-to-r from-red-500 to-rose-500 text-[16px] font-black text-white shadow-[0_14px_28px_rgba(239,68,68,0.22)]">중지</button>
         )}
 
-        <button onClick={moveToNext} disabled={isActive || currentIndex >= lines.length - 1} className="h-[56px] rounded-[18px] bg-slate-50 text-[15px] font-black text-blue-600 disabled:opacity-40">다음 문장</button>
+        <button onClick={() => goToIndex(currentIndex + 1)} disabled={isActive || currentIndex >= lines.length - 1} className="h-[56px] rounded-[18px] bg-slate-50 text-[15px] font-black text-blue-600 disabled:opacity-40">다음 문장</button>
       </div>
 
       <div className="mt-5 flex items-center justify-between">
-        <button onClick={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)} disabled={isActive || currentIndex === 0} className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-2xl text-slate-400 disabled:opacity-30">‹</button>
+        <button onClick={() => goToIndex(currentIndex - 1)} disabled={isActive || currentIndex === 0} className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-2xl text-slate-400 disabled:opacity-30">‹</button>
         <div className="flex gap-2">
           {lines.slice(0, Math.min(lines.length, 8)).map((line, index) => (
-            <span key={line.id} className={`h-2 w-2 rounded-full ${index === currentIndex ? 'bg-blue-600' : index < currentIndex ? 'bg-blue-300' : 'bg-slate-200'}`} />
+            <button key={line.id} onClick={() => goToIndex(index)} disabled={isActive} className={`h-2 w-2 rounded-full ${index === currentIndex ? 'bg-blue-600' : index < currentIndex ? 'bg-blue-300' : 'bg-slate-200'}`} aria-label={`${index + 1}번 문장`} />
           ))}
         </div>
-        <button onClick={moveToNext} disabled={isActive || currentIndex >= lines.length - 1} className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-2xl text-slate-400 disabled:opacity-30">›</button>
+        <button onClick={() => goToIndex(currentIndex + 1)} disabled={isActive || currentIndex >= lines.length - 1} className="grid h-10 w-10 place-items-center rounded-full bg-slate-50 text-2xl text-slate-400 disabled:opacity-30">›</button>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
